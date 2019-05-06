@@ -1,1 +1,16 @@
 Temp folder to debug cli conf issue
+
+
+My requirement
+
+When i provide the below command `fabric-join name fabric-sample` i should be able to pass `Username` and `password` and get the output.
+
+CLI (network-admin@ugui-9kspine2) > fabric-join name fabric-sample
+Joined fabric fabric-sample. Restarting nvOS...
+Please enter username and password:
+	Username (network-admin):
+	Password:
+Connected to Switch ugui-9kspine2; nvOS Identifier:0x9000776; Ver: 5.1.0-5010014593
+Warning! ugui-9kspine2's time is not in sync with the NTP Server.
+Warning! ugui-9kspine2's time is not in sync with the NTP Server.
+CLI (network-admin@ugui-9kspine2) >
