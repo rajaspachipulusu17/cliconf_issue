@@ -30,10 +30,12 @@ version_added: 2.8
 """
 
 import json
+import collections
 from ansible.plugins.cliconf import CliconfBase, enable_mode
 from ansible.module_utils.network.common.utils import to_list
 from ansible.module_utils._text import to_text
-
+from ansible.module_utils.common._collections_compat import Mapping
+from ansible.errors import AnsibleConnectionFailure
 
 
 class Cliconf(CliconfBase):
@@ -86,7 +88,11 @@ class Cliconf(CliconfBase):
                 raise ValueError("'output' value %s is not supported for run_commands" % output)
 
             try:
+                f = open("/tmp/command.txt", "a")
+                f.write("cmd %s\n" % cmd)
                 out = self.send_command(**cmd)
+                f.write("out %s\n" % out)
+                f.close()
             except AnsibleConnectionFailure as e:
                 if check_rc:
                     raise
@@ -104,20 +110,60 @@ class Cliconf(CliconfBase):
 
         results = []
         requests = []
-#        self.send_command('configure terminal')
-        for line in to_list(candidate):
-            if not isinstance(line, collections.Mapping):
-                line = {'command': line}
-
-            cmd = line['command']
-            if cmd != 'end' and cmd[0] != '!':
-                results.append(self.send_command(**line))
-                requests.append(cmd)
-
-#        self.send_command('end')
-#        else:
-#            raise ValueError('check mode is not supported')
+        #self.send_command('shell')
+        if commit:
+            for line in to_list(candidate):
+                if not isinstance(line, collections.Mapping):
+                    line = {'command': line}
+    
+                cmd = line['command']
+                if cmd != 'end' and cmd[0] != '!':
+                    results.append(self.send_command(**line))
+                    requests.append(cmd)
+#            self.send_command('end')
+        else:
+            raise ValueError('check mode is not supported')
 
         resp['request'] = requests
         resp['response'] = results
         return resp
+
+
+    def get_config(self):
+        pass
+
+
+
+    def get_diff(self, candidate=None, running=None, diff_match=None, diff_ignore_lines=None, path=None, diff_replace=None):
+        pass
+
+
+    def get_file(self, source=None, destination=None, proto='scp', timeout=30):
+        """Fetch file over scp/sftp from remote device
+        :param source: Source file path
+        :param destination: Destination file path
+        :param proto: Protocol to be used for file transfer,
+                      supported protocol: scp and sftp
+        :param timeout: Specifies the wait time to receive response from
+                        remote host before triggering timeout exception
+        :return: None
+        """
+        """Fetch file over scp/sftp from remote device"""
+        ssh = self._connection.paramiko_conn._connect_uncached()
+        if proto == 'scp':
+            if not HAS_SCP:
+                raise AnsibleError("Required library scp is not installed.  Please install it using `pip install scp`")
+            with SCPClient(ssh.get_transport(), socket_timeout=timeout) as scp:
+                scp.get(source, destination)
+        elif proto == 'sftp':
+            with ssh.open_sftp() as sftp:
+                sftp.get(source, destination)
+
+
+    def enable_response_logging(self):
+        """Enable logging command response"""
+        self.response_logging = True
+
+    def disable_response_logging(self):
+        """Disable logging command response"""
+        self.response_logging = False
