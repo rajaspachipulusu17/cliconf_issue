@@ -103,24 +103,24 @@ class Cliconf(CliconfBase):
         return responses
 
 
-    @enable_mode
     def edit_config(self, candidate=None, commit=True, replace=None, comment=None):
         resp = {}
-        operations = self.get_device_operations()
-
         results = []
         requests = []
-        #self.send_command('shell')
+        f = open("/tmp/edit_config.txt", "a")
+        f.write("candidate = %s\n" % candidate)
+        f.close()
         if commit:
             for line in to_list(candidate):
                 if not isinstance(line, collections.Mapping):
                     line = {'command': line}
-    
-                cmd = line['command']
-                if cmd != 'end' and cmd[0] != '!':
-                    results.append(self.send_command(**line))
-                    requests.append(cmd)
-#            self.send_command('end')
+#                    out =  self.send_command(**line)
+#                    f = open("/tmp/edit_config.txt", "a")
+#                    f.write("%s" % out)
+#                    f.close()
+
+                results.append(self.send_command(**line))
+                requests.append(line)
         else:
             raise ValueError('check mode is not supported')
 
@@ -167,3 +167,4 @@ class Cliconf(CliconfBase):
     def disable_response_logging(self):
         """Disable logging command response"""
         self.response_logging = False
+

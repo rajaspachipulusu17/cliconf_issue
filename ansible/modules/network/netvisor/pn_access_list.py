@@ -101,18 +101,27 @@ def check_cli(module, cli):
     """
     result = {'changed': False}
 
+    #cli += ' vrouter-show format name'
+    #s = 'switch ugui-9kspine1 vrouter-interface-show format switch,ip'
+    #s = 'switch ugui-9kspine1 vrouter-show format name'
 
     commands = [{
         'command': 'fabric-join name fabric-sample',
-        'prompt': ['Username (network-admin):', 'Password:'],
-        'answer': ['network-admin', 'test123'],
-        'newline': True,
+        'prompt': ["Username (network-admin):", "Password:"],
+        'answer': ["test123\n", "network-admin\n"],
     }]
 
     if commands:
-        load_config(module, commands)
+        out = load_config(module, commands)
 
+    f = open("/tmp/out.txt", "a")
+    f.write("out = %s\n" % out)
+    f.close()
     result['commands'] = commands
+    result['out'] = out
+    #s = 'fabric-join name fabric-sample'
+    #out = run_commands(module, show)[1]
+    #out = run_commands(module, s)
     module.exit_json(
         skipped=True,
         msg=result
@@ -192,3 +201,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
